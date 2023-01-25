@@ -1,13 +1,17 @@
 
 using ExcelDataReader;
+using IronXL;
+using System.Data.OleDb;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+
 
 namespace NewUploader
 {
     public partial class Form1 : Form
     {
+
         public Form1()
         {
             InitializeComponent();
@@ -75,6 +79,18 @@ namespace NewUploader
             int counter = 0;
             EmployeeData EmployeeData = new EmployeeData();
             System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+            WorkBook workbook = WorkBook.Create(ExcelFileFormat.XLSX);
+            var sheet = workbook.CreateWorkSheet("Result Sheet");
+            sheet["A1"].Value = "badgeno";
+            sheet["B1"].Value = "badgename";
+            sheet["C1"].Value = "empno";
+            sheet["D1"].Value = "date";
+            sheet["E1"].Value = "in_";
+            sheet["F1"].Value = "out_";
+
+            workbook.SaveAs("FingerTechFormatted.xlsx");
+
             using (var stream = File.Open(@"C:\ISISFile\"+ System.IO.Path.GetFileName(openFileDialog1.FileName), FileMode.Open, FileAccess.Read))
             {
                 using (var reader = ExcelReaderFactory.CreateReader(stream))
@@ -88,15 +104,41 @@ namespace NewUploader
                                 for (int column = 0; column < reader.FieldCount; column++)
                                 {
                                     if (column == 0)
-                                        EmployeeData.Person_ID = reader.GetValue(column).ToString();
-                                    if (column == 0)
+                                    {
+                                        EmployeeData.Person_ID = reader.GetValue(column).ToString().Replace("'", "");
+                                        sheet["A" + (counter + 1)].Value = EmployeeData.Person_ID;
+                                    }
+                                    if (column == 1)
+                                    {
                                         EmployeeData.EmployeeNumber = reader.GetValue(column).ToString(); //Get this from ISIS new table as I instructed
+                                    }
                                     if (column == 2)
-                                        EmployeeData.CheckDate = reader.GetValue(column).ToString();
+                                    {
+                                        if (reader.GetValue(column) == null)
+                                            EmployeeData.CheckDate = "";
+                                        else
+                                            EmployeeData.CheckDate = reader.GetValue(column).ToString();
+
+                                        sheet["D" + (counter + 1)].Value = EmployeeData.CheckDate;
+                                    }
                                     if (column == 3)
-                                        EmployeeData.CheckInTime = reader.GetValue(column).ToString();
+                                    {
+                                        if (reader.GetValue(column) == null)
+                                            EmployeeData.CheckInTime = "";
+                                        else
+                                            EmployeeData.CheckInTime = reader.GetValue(column).ToString();
+
+                                        sheet["E" + (counter + 1)].Value = EmployeeData.CheckInTime;
+                                    }
                                     if (column == 4)
-                                        EmployeeData.CheckoutTime = reader.GetValue(column).ToString();
+                                    {
+                                        if (reader.GetValue(column) == null)
+                                            EmployeeData.CheckoutTime = "";
+                                        else
+                                            EmployeeData.CheckoutTime = reader.GetValue(column).ToString();
+
+                                        sheet["F" + (counter + 1)].Value = EmployeeData.CheckoutTime;
+                                    }
 
 
                                 }
@@ -109,6 +151,8 @@ namespace NewUploader
 
                 }
             }
+
+            workbook.SaveAs("C:\\ISISFile\\FingerTechFormatted.xlsx");
         }
     }
 }
